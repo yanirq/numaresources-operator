@@ -24,12 +24,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/klog/v2"
+
+	securityv1 "github.com/openshift/api/security/v1"
+	machineconfigv1 "github.com/openshift/machine-config-operator/pkg/apis/machineconfiguration.openshift.io/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/k8stopologyawareschedwg/deployer/pkg/deployer/platform"
 	rtemanifests "github.com/k8stopologyawareschedwg/deployer/pkg/manifests/rte"
-	securityv1 "github.com/openshift/api/security/v1"
-	machineconfigv1 "github.com/openshift/machine-config-operator/pkg/apis/machineconfiguration.openshift.io/v1"
 
 	nropv1 "github.com/openshift-kni/numaresources-operator/api/numaresourcesoperator/v1"
 	nodegroupv1 "github.com/openshift-kni/numaresources-operator/api/numaresourcesoperator/v1/helper/nodegroup"
@@ -75,6 +76,11 @@ func (em *ExistingManifests) MachineConfigsState(mf rtemanifests.Manifests) []ob
 		return ret
 	}
 	for _, tree := range em.trees {
+		if !tree.NodeGroup.Config.IsManagedObjectEnabled(nropv1.ManagedMachineConfig) {
+			klog.V(4).InfoS("machine config setup disabled for node group", "mcps", len(tree.MachineConfigPools))
+			continue
+		}
+
 		for _, mcp := range tree.MachineConfigPools {
 			mcName := objectnames.GetMachineConfigName(em.instance.Name, mcp.Name)
 			if mcp.Spec.MachineConfigSelector == nil {
@@ -193,6 +199,11 @@ func (em *ExistingManifests) State(mf rtemanifests.Manifests, updater GenerateDe
 	}
 
 	for _, tree := range em.trees {
+		if !tree.NodeGroup.Config.IsManagedObjectEnabled(nropv1.ManagedRTEDaemonSet) {
+			klog.V(4).InfoS("daemon set setup disabled for node group", "mcps", len(tree.MachineConfigPools))
+			continue
+		}
+
 		for _, mcp := range tree.MachineConfigPools {
 			var existingDs client.Object
 			var loadError error

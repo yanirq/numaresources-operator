@@ -51,6 +51,16 @@ spec:
         path: nodeGroups[0].config.infoRefreshPeriod
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: 'ManagedObjects enable fine-grained control about objects managed
+          in this node group. By default, the operator manages everything it is capable
+          of. By setting this list explicitely, users can partially disable objects
+          in this node group. The ordering is not relevant: the operator will enforce
+          the correct ordering internally of the objects preserving the correct dependencies;
+          the list is meant as flagset and cannot modify this ordering.'
+        displayName: Detailed list of objects managed in this node group
+        path: nodeGroups[0].config.managedObjects
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: PodsFingerprinting defines if pod fingerprint should be reported
           for the machines belonging to this group
         displayName: Enable or disable the pods fingerprinting setting

@@ -49,6 +49,8 @@ func (current NodeGroupConfig) Merge(updated NodeGroupConfig) NodeGroupConfig {
 	if updated.InfoRefreshPause != nil {
 		conf.InfoRefreshPause = updated.InfoRefreshPause
 	}
+	// always override Managed Objects
+	conf.ManagedObjects = CloneManagedObjects(updated.ManagedObjects)
 	return conf
 }
 
@@ -75,5 +77,13 @@ func SortedTolerations(tols []corev1.Toleration) []corev1.Toleration {
 		}
 		return ret[i].Effect < ret[j].Effect
 	})
+	return ret
+}
+
+func CloneManagedObjects(objs []ManagedObject) []ManagedObject {
+	ret := make([]ManagedObject, 0, len(objs))
+	for _, obj := range objs {
+		ret = append(ret, obj)
+	}
 	return ret
 }

@@ -39,6 +39,7 @@ func TestNodeGroupConfigDefaultMethod(t *testing.T) {
 				InfoRefreshMode:    defaultInfoRefreshMode(),
 				InfoRefreshPeriod:  defaultInfoRefreshPeriod(),
 				InfoRefreshPause:   defaultInfoRefreshPause(),
+				ManagedObjects:     AllManagedObjects(),
 			},
 		},
 		{
@@ -51,6 +52,7 @@ func TestNodeGroupConfigDefaultMethod(t *testing.T) {
 				InfoRefreshMode:    defaultInfoRefreshMode(),
 				InfoRefreshPeriod:  ptrToDuration(42 * time.Second),
 				InfoRefreshPause:   defaultInfoRefreshPause(),
+				ManagedObjects:     AllManagedObjects(),
 			},
 		},
 		{
@@ -63,6 +65,37 @@ func TestNodeGroupConfigDefaultMethod(t *testing.T) {
 				InfoRefreshMode:    defaultInfoRefreshMode(),
 				InfoRefreshPeriod:  defaultInfoRefreshPeriod(),
 				InfoRefreshPause:   ptrToRTEMode(InfoRefreshPauseEnabled),
+				ManagedObjects:     AllManagedObjects(),
+			},
+		},
+		{
+			name: "partial fill: managedObjects",
+			val: NodeGroupConfig{
+				ManagedObjects: AllManagedObjects(),
+			},
+			expected: NodeGroupConfig{
+				PodsFingerprinting: defaultPodsFingerprinting(),
+				InfoRefreshMode:    defaultInfoRefreshMode(),
+				InfoRefreshPeriod:  defaultInfoRefreshPeriod(),
+				InfoRefreshPause:   defaultInfoRefreshPause(),
+				ManagedObjects:     AllManagedObjects(),
+			},
+		},
+		{
+			name: "partial fill: partial managedObjects",
+			val: NodeGroupConfig{
+				ManagedObjects: []ManagedObject{
+					ManagedMachineConfig,
+				},
+			},
+			expected: NodeGroupConfig{
+				PodsFingerprinting: defaultPodsFingerprinting(),
+				InfoRefreshMode:    defaultInfoRefreshMode(),
+				InfoRefreshPeriod:  defaultInfoRefreshPeriod(),
+				InfoRefreshPause:   defaultInfoRefreshPause(),
+				ManagedObjects: []ManagedObject{
+					ManagedMachineConfig,
+				},
 			},
 		},
 	}
@@ -92,6 +125,7 @@ func TestNodeGroupConfigDefault(t *testing.T) {
 		InfoRefreshMode:    &refMode,
 		InfoRefreshPeriod:  &period,
 		InfoRefreshPause:   &infoRefreshPause,
+		ManagedObjects:     AllManagedObjects(),
 	})
 	got := toJSON(DefaultNodeGroupConfig())
 

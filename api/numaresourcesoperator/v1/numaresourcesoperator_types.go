@@ -86,6 +86,18 @@ const (
 	InfoRefreshPeriodicAndEvents InfoRefreshMode = "PeriodicAndEvents"
 )
 
+// +kubebuilder:validation:Enum=MachineConfig;DaemonSet
+type ManagedObject string
+
+const (
+	// ManagedMachineConfig instructs the operator to manage MachineConfig on the platforms
+	// which require them (OpenShift)
+	ManagedMachineConfig ManagedObject = "MachineConfig"
+
+	// ManagedRTEDaemonSet instructs the operator to manage the RTE Daemonset.
+	ManagedRTEDaemonSet ManagedObject = "RTEDaemonSet"
+)
+
 // NodeGroupConfig exposes topology info reporting setting per node group
 type NodeGroupConfig struct {
 	// PodsFingerprinting defines if pod fingerprint should be reported for the machines belonging to this group
@@ -109,6 +121,12 @@ type NodeGroupConfig struct {
 	// +optional
 	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Extra tolerations for the topology updater daemonset",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+	// ManagedObjects enable fine-grained control about objects managed in this node group. By default, the operator manages everything it is capable of.
+	// By setting this list explicitely, users can partially disable objects in this node group. The ordering is not relevant: the operator will enforce the correct
+	// ordering internally of the objects preserving the correct dependencies; the list is meant as flagset and cannot modify this ordering.
+	// +optional
+	//+operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Detailed list of objects managed in this node group",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	ManagedObjects []ManagedObject `json:"managedObjects,omitempty"`
 }
 
 // NodeGroup defines group of nodes that will run resource topology exporter daemon set
@@ -182,6 +200,13 @@ func init() {
 	SchemeBuilder.Register(&NUMAResourcesOperator{}, &NUMAResourcesOperatorList{})
 }
 
+func AllManagedObjects() []ManagedObject {
+	return []ManagedObject{
+		ManagedMachineConfig,
+		ManagedRTEDaemonSet,
+	}
+}
+
 func (ngc *NodeGroupConfig) ToString() string {
 	if ngc == nil {
 		return ""
@@ -189,7 +214,19 @@ func (ngc *NodeGroupConfig) ToString() string {
 	ngc.SetDefaults()
 	ret := fmt.Sprintf("PodsFingerprinting mode: %s InfoRefreshMode: %s InfoRefreshPeriod: %s InfoRefreshPause: %s", *ngc.PodsFingerprinting, *ngc.InfoRefreshMode, *ngc.InfoRefreshPeriod, *ngc.InfoRefreshPause)
 	if len(ngc.Tolerations) > 0 {
-		ret += fmt.Sprintf(" Tolerations: %v" + ngc.Tolerations)
+		ret += fmt.Sprintf(" Tolerations: %v", ngc.Tolerations)
 	}
 	return ret
+}
+
+func (ngc *NodeGroupConfig) IsManagedObjectEnabled(obj ManagedObject) bool {
+	if len(ngc.ManagedObjects) == 0 {
+		return true
+	}
+	for _, managedObject := range ngc.ManagedObjects {
+		if managedObject == obj {
+			return true
+		}
+	}
+	return false
 }

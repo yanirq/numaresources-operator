@@ -41,6 +41,9 @@ func (ngc *NodeGroupConfig) SetDefaults() {
 	if ngc.InfoRefreshPause == nil {
 		ngc.InfoRefreshPause = defaultInfoRefreshPause()
 	}
+	if len(ngc.ManagedObjects) == 0 {
+		ngc.ManagedObjects = AllManagedObjects()
+	}
 }
 
 func defaultPodsFingerprinting() *PodsFingerprintingMode {
