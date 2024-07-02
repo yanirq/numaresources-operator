@@ -183,9 +183,13 @@ func init() {
 }
 
 func (ngc *NodeGroupConfig) ToString() string {
-	if ngc != nil {
-		ngc.SetDefaults()
-		return fmt.Sprintf("PodsFingerprinting mode: %s InfoRefreshMode: %s InfoRefreshPeriod: %s InfoRefreshPause: %s", *ngc.PodsFingerprinting, *ngc.InfoRefreshMode, *ngc.InfoRefreshPeriod, *ngc.InfoRefreshPause)
+	if ngc == nil {
+		return ""
 	}
-	return ""
+	ngc.SetDefaults()
+	ret := fmt.Sprintf("PodsFingerprinting mode: %s InfoRefreshMode: %s InfoRefreshPeriod: %s InfoRefreshPause: %s", *ngc.PodsFingerprinting, *ngc.InfoRefreshMode, *ngc.InfoRefreshPeriod, *ngc.InfoRefreshPause)
+	if len(ngc.Tolerations) > 0 {
+		ret += fmt.Sprintf(" Tolerations: %v" + ngc.Tolerations)
+	}
+	return ret
 }
