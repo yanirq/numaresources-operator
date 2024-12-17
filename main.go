@@ -99,9 +99,10 @@ type ImageParams struct {
 }
 
 type RenderParams struct {
-	NRTCRD    bool
-	Namespace string
-	Image     ImageParams
+	NRTCRD        bool
+	MachineConfig bool
+	Namespace     string
+	Image         ImageParams
 }
 
 type Params struct {
@@ -145,6 +146,7 @@ func (pa *Params) FromFlags() {
 	flag.StringVar(&pa.render.Namespace, "render-namespace", pa.render.Namespace, "outputs the manifests rendered using the given namespace")
 	flag.StringVar(&pa.render.Image.Exporter, "render-image", pa.render.Image.Exporter, "outputs the manifests rendered using the given image")
 	flag.StringVar(&pa.render.Image.Scheduler, "render-image-scheduler", pa.render.Image.Scheduler, "outputs the manifests rendered using the given image for the scheduler")
+	flag.BoolVar(&pa.render.MachineConfig, "render-machine-config", pa.render.MachineConfig, "outputs the rendered machine config manifests")
 	flag.BoolVar(&pa.showVersion, "version", pa.showVersion, "outputs the version and exit")
 	flag.BoolVar(&pa.enableScheduler, "enable-scheduler", pa.enableScheduler, "enable support for the NUMAResourcesScheduler object")
 	flag.BoolVar(&pa.enableWebhooks, "enable-webhooks", pa.enableWebhooks, "enable conversion webhooks")
@@ -226,7 +228,14 @@ func main() {
 	klog.InfoS("manifests loaded", "component", "RTE")
 
 	if params.renderMode {
-		os.Exit(manageRendering(params.render, clusterPlatform, apiManifests, rteManifests, namespace, params.enableScheduler))
+		rd := renderer{
+			params:                 params.render,
+			clusterPlatform:        clusterPlatform,
+			clusterPlatformVersion: clusterPlatformVersion,
+			namespace:              namespace,
+			enableScheduler:        params.enableScheduler,
+		}
+		os.Exit(rd.Process(apiManifests, rteManifests))
 	}
 
 	klog.InfoS("metrics server", "enabled", params.enableMetrics, "addr", params.metricsAddr)
@@ -347,8 +356,16 @@ func manageIntrospection() int {
 	return 0
 }
 
-func manageRendering(render RenderParams, clusterPlatform platform.Platform, apiMf apimanifests.Manifests, rteMf rtemanifests.Manifests, namespace string, enableScheduler bool) int {
-	if render.NRTCRD {
+type renderer struct {
+	params                 RenderParams
+	clusterPlatform        platform.Platform
+	clusterPlatformVersion platform.Version
+	namespace              string
+	enableScheduler        bool
+}
+
+func (rd renderer) Process(apiMf apimanifests.Manifests, rteMf rtemanifests.Manifests) int {
+	if rd.params.NRTCRD {
 		if err := renderObjects(apiMf.ToObjects()); err != nil {
 			klog.ErrorS(err, "unable to render manifests")
 			return 1
@@ -357,20 +374,20 @@ func manageRendering(render RenderParams, clusterPlatform platform.Platform, api
 	}
 
 	var objs []client.Object
-	if enableScheduler {
-		if render.Image.Scheduler == "" {
+	if rd.enableScheduler {
+		if rd.params.Image.Scheduler == "" {
 			klog.Errorf("missing scheduler image")
 			return 1
 		}
 
-		schedMf, err := schedmanifests.GetManifests(namespace)
+		schedMf, err := schedmanifests.GetManifests(rd.namespace)
 		if err != nil {
 			klog.ErrorS(err, "unable to load the Scheduler manifests")
 			return 1
 		}
 		klog.InfoS("manifests loaded", "component", "Scheduler")
 
-		mf, err := renderSchedulerManifests(schedMf, render.Image.Scheduler)
+		mf, err := renderSchedulerManifests(schedMf, rd.params.Image.Scheduler)
 		if err != nil {
 			klog.ErrorS(err, "unable to render scheduler manifests")
 			return 1
@@ -379,13 +396,24 @@ func manageRendering(render RenderParams, clusterPlatform platform.Platform, api
 	}
 
 	imgs := images.Data{
-		User:    render.Image.Exporter,
+		User:    rd.params.Image.Exporter,
 		Builtin: images.SpecPath(),
 	}
-	mf, err := renderRTEManifests(rteMf, render.Namespace, imgs)
+	mf, err := renderRTEManifests(rteMf, rd.params.Namespace, imgs)
 	if err != nil {
 		klog.ErrorS(err, "unable to render RTE manifests")
 		return 1
+	}
+	ok, err := rd.clusterPlatformVersion.AtLeastString("4.18")
+	if err != nil {
+		klog.ErrorS(err, "unable to run version checks")
+		return 1
+	}
+	if ok {
+		// we are given the manifests as parameter, and we need to support
+		// the legacy path for some time still, so the best we can do is
+		// blank this field
+		mf.MachineConfig = nil
 	}
 	objs = append(objs, mf.ToObjects()...)
 
