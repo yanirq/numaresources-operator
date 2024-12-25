@@ -1,0 +1,43 @@
+#TODO - check other golang builder options equivilant to registry-proxy.engineering.redhat.com/rh-osbs/openshift-golang-builder:rhel_9_golang_1.22
+FROM docker.io/golang:1.23 AS builder
+
+WORKDIR /go/src/github.com/openshift-kni/numaresources-operator
+COPY . .
+
+ENV GOEXPERIMENT=strictfipsruntime
+ENV CGO_ENABLED=1
+ENV GOTAGS="strictfipsruntime"
+
+# Build
+RUN \
+	NRO_BUILD_VERSION=${CI_VERSION} \
+	NRO_BUILD_COMMIT=${CI_UPSTREAM_COMMIT} \
+	make binary-all
+
+#TODO - consider registry.redhat.io/rhel9-4-els/rhel-minimal    
+FROM registry.access.redhat.com/ubi9/ubi-minimal
+COPY --from=builder /go/src/github.com/openshift-kni/numaresources-operator/bin/manager /bin/numaresources-operator
+# bundle the operand, and use a backward compatible name for RTE
+COPY --from=builder /go/src/github.com/openshift-kni/numaresources-operator/bin/exporter /bin/resource-topology-exporter
+#COPY --from=builder /go/src/github.com/openshift-kni/numaresources-operator/bin/buildinfo.json /usr/local/share
+RUN mkdir /etc/resource-topology-exporter/ && \
+    touch /etc/resource-topology-exporter/config.yaml
+RUN microdnf install -y hwdata && \
+    microdnf clean -y all
+USER 65532:65532
+ENTRYPOINT ["/bin/numaresources-operator"]
+LABEL com.redhat.component="numaresources-operator-container" \
+      name="openshift4/numaresources-operator-rhel9" \
+      #version="v${CI_VERSION}" \
+      #upstream-version="${CI_UPSTREAM_VERSION}" \
+      #upstream-vcs-ref="${CI_UPSTREAM_COMMIT}" \
+      upstream-vcs-type="git" \
+      #upstream-vcs-url="${CI_UPSTREAM_URL}" \
+      summary="numaresources-operator" \
+      io.openshift.expose-services="" \
+      io.openshift.tags="operator" \
+      io.k8s.display-name="numaresources-operator" \
+      maintainer="openshift-operators@redhat.com" \
+      description="numaresources-operator" \
+      io.openshift.maintainer.component="NUMA Resources Operator" \
+      io.openshift.maintainer.product="OpenShift Container Platform"
