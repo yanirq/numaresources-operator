@@ -1,5 +1,4 @@
-#TODO - check other golang builder options equivilant to registry-proxy.engineering.redhat.com/rh-osbs/openshift-golang-builder:rhel_9_golang_1.22
-FROM registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.23-openshift-4.19 AS builder
+FROM brew.registry.redhat.io/rh-osbs/openshift-golang-builder:v1.23 as builder
 
 WORKDIR /go/src/github.com/openshift-kni/numaresources-operator
 COPY . .
