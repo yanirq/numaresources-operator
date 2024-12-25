@@ -1,5 +1,5 @@
 #TODO - check other golang builder options equivilant to registry-proxy.engineering.redhat.com/rh-osbs/openshift-golang-builder:rhel_9_golang_1.22
-FROM docker.io/golang:1.23 AS builder
+FROM registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.23-openshift-4.19 AS builder
 
 WORKDIR /go/src/github.com/openshift-kni/numaresources-operator
 COPY . .
@@ -10,8 +10,8 @@ ENV GOTAGS="strictfipsruntime"
 
 # Build
 RUN \
-	NRO_BUILD_VERSION=${CI_VERSION} \
-	NRO_BUILD_COMMIT=${CI_UPSTREAM_COMMIT} \
+	#NRO_BUILD_VERSION=${CI_VERSION} \
+	#NRO_BUILD_COMMIT=${CI_UPSTREAM_COMMIT} \
 	make binary-all
 
 #TODO - consider registry.redhat.io/rhel9-4-els/rhel-minimal    
