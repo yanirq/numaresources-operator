@@ -29,6 +29,8 @@ spec:
     value: 5d
   - name: dockerfile
     value: .konflux/operator/konflux.Dockerfile
+  - name: hermetic
+    value: "true"
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while reducing network traffic.
