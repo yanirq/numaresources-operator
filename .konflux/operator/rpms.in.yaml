@@ -5,8 +5,7 @@ contentOrigin:
 
 packages:
   # list of rpm names to resolve
-  - util-linux
-  - tar
+  - hwdata
 
 arches:
   # The list of architectures can be set in the config file. Any `--arch` option set
