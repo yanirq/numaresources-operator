@@ -4,18 +4,12 @@ lockfileVendor: redhat
 arches:
 - arch: x86_64
   packages:
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os/Packages/h/hwdata-0.348-9.15.el9.noarch.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9.4/x86_64/baseos/os/Packages/h/hwdata-0.348-9.13.el9.noarch.rpm
     repoid: rhel-9-for-x86_64-baseos-rpms
-    size: 1699184
-    checksum: sha256:cadff207e77de9ce3b5867113632655c2aa74a060c959c063f2658a45a94090d
+    size: 1674692
+    checksum: sha256:c6dd3fc36960df2631bb2cc55d5a9fc431d882ba91336f5f3aef17c15c12b8a7
     name: hwdata
-    evr: 0.348-9.15.el9
-    sourcerpm: hwdata-0.348-9.15.el9.src.rpm
-  source:
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/source/SRPMS/Packages/h/hwdata-0.348-9.15.el9.src.rpm
-    repoid: rhel-9-for-x86_64-baseos-source-rpms
-    size: 2461662
-    checksum: sha256:2b6d8f8811157db376bd790daa3e1504e0d6a2356a309f08569f94a979484d00
-    name: hwdata
-    evr: 0.348-9.15.el9
+    evr: 0.348-9.13.el9
+    sourcerpm: hwdata-0.348-9.13.el9.src.rpm
+  source: []
   module_metadata: []
