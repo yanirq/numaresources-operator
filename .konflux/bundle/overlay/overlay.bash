@@ -266,7 +266,7 @@ parse_args() {
 
 overlay_release()
 {
-    echo "Overlaying relase..."
+    echo "Overlaying release..."
 
     local version="4.20.0"
     local name="numaresources-operator"
@@ -335,7 +335,7 @@ overlay_release()
     yq e -i "del(.spec.replaces)" $ARG_CSV_FILE
 
     # use this from 4.20.1 onwards
-    # ./yq e -i ".spec.replaces = $replaces)" $ARG_CSV_FILE
+    # yq e -i ".spec.replaces = \"$replaces\"" $ARG_CSV_FILE
 
     echo "Overlaying release completed!"
 }
@@ -364,12 +364,12 @@ EXAMPLES
 
    - Pin (sha256) images on 'numaresources-operator.clusterserviceversion.yaml' according to the configuration on 'pin_images.in.yaml':
 
-     $ overlay.bash --set-pinning-file pin_images.in.yaml --set-csv-file numaresources-operator.clusterserviceversion.yaml
+     $ $SCRIPT_NAME --set-pinning-file pin_images.in.yaml --set-csv-file numaresources-operator.clusterserviceversion.yaml
 
    - Pin (sha256) images on 'numaresources-operator.clusterserviceversion.yaml' according to the configuration on 'pin_images.in.yaml'
      and map them to the production registry according to the configuration on 'map_images.in.yaml':
 
-     $ overlay.bash --set-pinning-file pin_images.in.yaml --set-mapping-file map_images.in.yaml --set-mapping-production --set-csv-file numaresources-operator.clusterserviceversion.yaml
+     $ $SCRIPT_NAME --set-pinning-file pin_images.in.yaml --set-mapping-file map_images.in.yaml --set-mapping-production --set-csv-file numaresources-operator.clusterserviceversion.yaml
 
 DESCRIPTION
 
